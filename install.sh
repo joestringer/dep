@@ -70,6 +70,12 @@ findGoBinDirectory() {
         echo "Installation could not determine your \$GOPATH."
         exit 1
     fi
+    if [ "$CYGWIN" = "true" ]; then
+        # Convert "C:\..." into "/cygdrive/c/..."
+        DRIVE=$(echo "$EFFECTIVE_GOPATH" | sed 's/^\([^:]\)*:.*/\/cygdrive\/\1/g' | tr "[:upper:]" "[:lower:]")
+        SUBPATH=$(echo "$EFFECTIVE_GOPATH" | sed 's/^[^:]*:\(.*\)/\1/g' | tr '\\' '/')
+        EFFECTIVE_GOPATH="$DRIVE$SUBPATH"
+    fi
     if [ -z "$GOBIN" ]; then
         GOBIN=$(echo "${EFFECTIVE_GOPATH%%:*}/bin" | sed s#//*#/#g)
     fi
@@ -107,6 +113,8 @@ initOS() {
         freebsd) OS='freebsd';;
         mingw*) OS='windows';;
         msys*) OS='windows';;
+        cygwin*) OS='windows';
+                 CYGWIN='true';;
         *) echo "OS ${OS} is not supported by this installation script"; exit 1;;
     esac
     echo "OS = $OS"
